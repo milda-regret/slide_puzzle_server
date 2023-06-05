@@ -6,16 +6,16 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, world!'
+    return 'Server on!'
 
 puzzles = { 'size' : 7, 'puzzle' : [
-    { 'name' : 'puzzle1', 'type' : 'png', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle2', 'type' : 'png', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle3', 'type' : 'png', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle4', 'type' : 'png', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle5', 'type' : 'jpg', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle6', 'type' : 'jpg', 'contributor': '에헬즈' },
-    { 'name' : 'puzzle7', 'type' : 'jpg', 'contributor': '에헬즈' },
+    { 'name' : '1', 'type' : 'png', 'contributor': '에헬즈' },
+    { 'name' : '2', 'type' : 'png', 'contributor': '에헬즈' },
+    { 'name' : '3', 'type' : 'png', 'contributor': '에헬즈' },
+    { 'name' : '4', 'type' : 'png', 'contributor': '에헬즈' },
+    { 'name' : '5', 'type' : 'jpg', 'contributor': '에헬즈' },
+    { 'name' : '6', 'type' : 'jpg', 'contributor': '에헬즈' },
+    { 'name' : '7', 'type' : 'jpg', 'contributor': '에헬즈' },
 ]}
 
 @app.route('/puzzles')
@@ -43,12 +43,61 @@ def get_user_profile():
 
         # 등록되지 않은 사용자
     if (user is None):
-        user = {'id': id, 'name': 'User', 'solved puzzle': []}
+        user = {'id': id, 'name': 'User', 'solved_puzzle': []}
         user_list.append(user)
         with open('./list.json', 'w') as fd:
             json.dump(user_list, fd)
     
     return jsonify(user)
+
+@app.route('/user', methods=['POST'])
+def change_user_name():
+    data = request.get_json(silent=True)
+    if (data is None):
+        return 'usage: POST /user \{ "id": "<ID>", "name": "<NAME>" \}'
+    data['id'] = str(data['id'])
+    
+    user = None
+    user_list: list = list()
+    with open('./list.json', 'r') as fd:
+        user_list = json.load(fd)
+        for u in user_list:
+            if (u['id'] == data['id']):
+                user = u
+                break
+
+    if (user is None):
+        return 'No user'
+    
+    user['name'] = data['name']
+    with open('list.json', 'w') as fd:
+        json.dump(user_list, fd)
+    return 'name changed'
+
+@app.route('/user', methods=['DELETE'])
+def delete_user():
+    id = request.args.get('id')
+    if (id is None):
+        return 'usage: DELETE /user?id=<user id>'
+    
+    user = None
+    user_list: list = list()
+    with open('./list.json', 'r') as fd:
+        user_list = json.load(fd)
+        for u in user_list:
+            if (u['id'] == id):
+                user = u
+                break
+
+        # 등록되지 않은 사용자
+    if (user is None):
+        return 'No user'
+    
+    user_list.remove(user)
+    with open('./list.json', 'w') as fd:
+            json.dump(user_list, fd)
+    
+    return 'delete success'
 
 @app.route('/clear')
 def clear_puzzle():
@@ -67,11 +116,11 @@ def clear_puzzle():
     if (user is None):
         return 'No user'
     
-    for x in user['solved puzzle']:
+    for x in user['solved_puzzle']:
         if (x == puzzle):
             return 'saved'
     
-    user['solved puzzle'].append(puzzle)
+    user['solved_puzzle'].append(puzzle)
     with open('./list.json', 'w') as fd:
         json.dump(user_list, fd)
     return 'saved'
