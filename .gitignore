@@ -4,3 +4,4 @@ __pycache__
 puzzle_env
 /static/*.png
 /static/*.jpg
+list.json
